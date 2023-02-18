@@ -58,19 +58,20 @@ def tile_down(image, window_size):
     # image = image.mean(axis=1).mean(axis=2)
     
     plt.imshow(image/255)
+    return image
     
     
-
+tile_size = 100
 image = np.array(PIL.Image.open('christ.jpg'))
-tile_down(image, 30)
+image = cv2.cvtColor(tile_down(image, 30), cv2.COLOR_BGR2HLS)
 
 # load all jpg images in an array of bgr
 im_list = filter(lambda x: x.lower().endswith('.jpg') or x.lower().endswith('.jpeg'), os.listdir('subimages'))
-im_list = map(lambda x: center_crop(np.array(PIL.Image.open(f'subimages/{x}')), 100), im_list)
-im_list = list(im_list)
+im_list = map(lambda x: center_crop(np.array(PIL.Image.open(f'subimages/{x}')), tile_size), im_list)
+im_list = np.array(list(im_list))
 
 # get average rgb values of each image and convert the average to hls
-hls_avg = np.array(im_list).astype('float64').mean(axis=1).mean(axis=1)
+hls_avg = im_list.astype('float64').mean(axis=1).mean(axis=1)
 hls_avg = cv2.cvtColor(hls_avg[None, :, :].astype(np.uint8), cv2.COLOR_BGR2HLS).reshape(-1, 3)
 
 # this is a hashbin that contains the index of the image (in im_list)
@@ -95,9 +96,27 @@ for hue in range(180):
         continue
     
     hue_list[hue].sort()
+    
     hashbin[hue, :(hue_list[hue][0][0] + hue_list[hue][1][0])//2]   = hue_list[hue][0][1]
     hashbin[hue, (hue_list[hue][-1][0] + hue_list[hue][-2][0])//2:] = hue_list[hue][-1][1]
     
     for (sat_next, _), (sat_curr, index), (sat_prev, _) in zip(hue_list[hue][2:], hue_list[hue][1:-1], hue_list[hue][0:-2]):
         hashbin[hue, (sat_prev+sat_curr)//2:(sat_next+sat_curr)//2] = index
+
+# now contains a list of all hues with atleast one image
+hue_list = [hue for hue in range(180) if hashbin[hue][0] != -1]
+
+# now we walk through all the hues and replace the entire row with closest filled hue row
+hashbin[:(hue_list[0]+hue_list[1])//2]   = hashbin[hue_list[0]]
+hashbin[(hue_list[-1]+hue_list[-2])//2:] = hashbin[hue_list[-1]]
+
+for hue_next, hue_curr, hue_prev in zip(hue_list[2:], hue_list[1:-1], hue_list[0:-2]):
+    hashbin[(hue_prev+hue_curr)//2:(hue_next+hue_curr)//2, :] = hashbin[hue_curr]
     
+# we create an empty rgb image and fill it up using the hashbin we've created
+new_image = np.zeros((image.shape[0]*tile_size, image.shape[1]*tile_size, 3))
+
+for i in range(image.shape[0]):
+    for j in range(image.shape[1]):
+        h, l, s = image[i, j]
+        new_image[i*tile_size: (i+1)*tile_size, j*tile_size: (j+1)*tile_size] = im_list[hashbin[h, s]]
