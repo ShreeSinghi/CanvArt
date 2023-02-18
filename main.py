@@ -14,6 +14,16 @@ import PIL
 from matplotlib import pyplot as plt
 import os
 
+# can be optimised by creating a global "temporary" variable so that memory doesn't
+# have to be created and freed repeatedly
+def shift_colour(image, dH, dL, dS):
+    image = image.astype(float)
+    image[:, :, 0] = (image[:, :, 0]+dH)%180
+    image[:, :, 1] = np.clip(image[:, :, 1] + dL, 0, 255)
+    image[:, :, 2] = np.clip(image[:, :, 2] + dS, 0, 255)
+    
+    return cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_HLS2BGR)
+
 def center_crop(image, resize_dim):
 
     height, width, _ = image.shape
@@ -37,7 +47,7 @@ def tile_down(image, window_size):
 
     Returns
     -------
-    None.
+    numpy tensor representing the scaled image
 
     """
     
@@ -52,27 +62,26 @@ def tile_down(image, window_size):
     
     # takes average of pixel values
     image  = cv2.resize(image, dsize=(width//window_size, height//window_size), interpolation=cv2.INTER_CUBIC)
-    
-    # image = image.reshape(height//window_size, window_size,
-    #                       width//window_size, window_size, 3)
-    # image = image.mean(axis=1).mean(axis=2)
-    
-    plt.imshow(image/255)
+
     return image
     
     
-tile_size = 100
+TILE_SIZE = 100
 image = np.array(PIL.Image.open('christ.jpg'))
-image = cv2.cvtColor(tile_down(image, 30), cv2.COLOR_BGR2HLS)
+image = cv2.cvtColor(tile_down(image, 20), cv2.COLOR_BGR2HLS).astype(np.int16)
 
 # load all jpg images in an array of bgr
 im_list = filter(lambda x: x.lower().endswith('.jpg') or x.lower().endswith('.jpeg'), os.listdir('subimages'))
-im_list = map(lambda x: center_crop(np.array(PIL.Image.open(f'subimages/{x}')), tile_size), im_list)
+im_list = map(lambda x: center_crop(np.array(PIL.Image.open(f'subimages/{x}')), TILE_SIZE), im_list)
 im_list = np.array(list(im_list))
 
 # get average rgb values of each image and convert the average to hls
-hls_avg = im_list.astype('float64').mean(axis=1).mean(axis=1)
-hls_avg = cv2.cvtColor(hls_avg[None, :, :].astype(np.uint8), cv2.COLOR_BGR2HLS).reshape(-1, 3)
+hls_avg = im_list.mean(axis=1).mean(axis=1)
+hls_avg = cv2.cvtColor(hls_avg[None, :, :].astype(np.uint8), cv2.COLOR_BGR2HLS).reshape(-1, 3).astype(np.int16)
+
+# store im_list as hls because its easier to work with later
+im_list = cv2.cvtColor(im_list.reshape(-1, 100, 3), cv2.COLOR_BGR2HLS).reshape(-1, TILE_SIZE, TILE_SIZE, 3)
+im_list = im_list.astype(np.int16)
 
 # this is a hashbin that contains the index of the image (in im_list)
 # that should be referred for each point in hue-saturation space, hence number of input images
@@ -81,7 +90,6 @@ hashbin = np.zeros((180, 256), dtype=np.int16)-1
 
 # contains tuples of the form (saturation, index in im_list) for each image of that hue
 hue_list = [list() for i in range(180)]
-
 
 for i, hls in enumerate(hls_avg):
     hue_list[hls[0]].append((int(hls[2]), i))
@@ -113,10 +121,15 @@ hashbin[(hue_list[-1]+hue_list[-2])//2:] = hashbin[hue_list[-1]]
 for hue_next, hue_curr, hue_prev in zip(hue_list[2:], hue_list[1:-1], hue_list[0:-2]):
     hashbin[(hue_prev+hue_curr)//2:(hue_next+hue_curr)//2, :] = hashbin[hue_curr]
     
+# we adjust the average hsv values
 # we create an empty rgb image and fill it up using the hashbin we've created
-new_image = np.zeros((image.shape[0]*tile_size, image.shape[1]*tile_size, 3))
+
+new_image = np.zeros((image.shape[0]*TILE_SIZE, image.shape[1]*TILE_SIZE, 3))
 
 for i in range(image.shape[0]):
     for j in range(image.shape[1]):
         h, l, s = image[i, j]
-        new_image[i*tile_size: (i+1)*tile_size, j*tile_size: (j+1)*tile_size] = im_list[hashbin[h, s]]
+        dH, dL, dS = image[i, j] - hls_avg[hashbin[h, s]]
+        new_image[i*TILE_SIZE: (i+1)*TILE_SIZE, j*TILE_SIZE: (j+1)*TILE_SIZE] = shift_colour(im_list[hashbin[h, s]], dH, dL, dS)
+
+plt.imshow(new_image.astype(float)/255)
