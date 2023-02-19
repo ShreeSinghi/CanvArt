@@ -18,7 +18,7 @@ import os
 # have to be created and freed repeatedly
 def shift_colour(image, dH, dL, dS):
     image = image.astype(float)
-    image[:, :, 0] = (image[:, :, 0]+dH)%180
+    image[:, :, 0] = (image[:, :, 0]+dH)%181
     image[:, :, 1] = np.clip(image[:, :, 1] + dL, 0, 255)
     image[:, :, 2] = np.clip(image[:, :, 2] + dS, 0, 255)
     
@@ -66,9 +66,9 @@ def tile_down(image, window_size):
     return image
     
     
-TILE_SIZE = 100
+TILE_SIZE = 50
 image = np.array(PIL.Image.open('christ.jpg'))
-image = cv2.cvtColor(tile_down(image, 20), cv2.COLOR_BGR2HLS).astype(np.int16)
+image = cv2.cvtColor(tile_down(image, 15), cv2.COLOR_BGR2HLS).astype(np.int16)
 
 # load all jpg images in an array of bgr
 im_list = filter(lambda x: x.lower().endswith('.jpg') or x.lower().endswith('.jpeg'), os.listdir('subimages'))
@@ -86,16 +86,16 @@ im_list = im_list.astype(np.int16)
 # this is a hashbin that contains the index of the image (in im_list)
 # that should be referred for each point in hue-saturation space, hence number of input images
 # must be limited (keep in mind later)
-hashbin = np.zeros((180, 256), dtype=np.int16)-1
+hashbin = np.zeros((181, 256), dtype=np.int16)-1
 
 # contains tuples of the form (saturation, index in im_list) for each image of that hue
-hue_list = [list() for i in range(180)]
+hue_list = [list() for i in range(181)]
 
 for i, hls in enumerate(hls_avg):
     hue_list[hls[0]].append((int(hls[2]), i))
 
 # for each hue we "fill" all unknown saturation values with closest image
-for hue in range(180):
+for hue in range(181):
     if not hue_list[hue]:
         continue
     
@@ -112,7 +112,7 @@ for hue in range(180):
         hashbin[hue, (sat_prev+sat_curr)//2:(sat_next+sat_curr)//2] = index
 
 # now contains a list of all hues with atleast one image
-hue_list = [hue for hue in range(180) if hashbin[hue][0] != -1]
+hue_list = [hue for hue in range(181) if hashbin[hue][0] != -1]
 
 # now we walk through all the hues and replace the entire row with closest filled hue row
 hashbin[:(hue_list[0]+hue_list[1])//2]   = hashbin[hue_list[0]]
