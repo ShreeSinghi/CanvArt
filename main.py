@@ -5,14 +5,12 @@ Created on Thu Feb 16 23:39:28 2023
 
 @author: shree
 
-remember to deal with the case where two images have same hue and saturation
 """
-
 import numpy as np
 import cv2
 import PIL
 from matplotlib import pyplot as plt
-from hasher import im_list, hls_avg, hashbin, TILE_SIZE
+from hasher import im_list, bgr_avg, hashbin, TILE_SIZE
 
 # can be optimised by creating a global "temporary" variable so that memory doesn't
 # have to be created and freed repeatedly
@@ -21,7 +19,7 @@ def shift_colour(image, dH, dL, dS):
     # image[:, :, 0] = (image[:, :, 0]+dH)%181
     # image[:, :, 1] = np.clip(image[:, :, 1] + dL, 0, 255)
     # image[:, :, 2] = np.clip(image[:, :, 2] + dS, 0, 255)
-    
+
     return cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_HLS2BGR)
 
 def tile_down(image, window_size):
@@ -30,7 +28,7 @@ def tile_down(image, window_size):
     ----------
     image : np.array
         the image to be tiled
-        
+
     window_size : int
         size of tile
 
@@ -39,46 +37,38 @@ def tile_down(image, window_size):
     numpy tensor representing the scaled image
 
     """
-    
+
     # chops down right and lower side of image if indivisible
-    
+
     height, width, _ = image.shape
-    
-    right_index = width-(width%window_size)
-    lower_index = height-(height%window_size)
-    
-    image = image[:lower_index, :right_index]
-    
+
     # takes average of pixel values
     image  = cv2.resize(image, dsize=(width//window_size, height//window_size), interpolation=cv2.INTER_CUBIC)
 
     return image
-    
+
 video = cv2.VideoCapture(0)
 
 while(video.isOpened()):
     showing, image = video.read()
-    
-    cv2.imshow('original', image.astype(np.uint8))
 
     # image = np.array(PIL.Image.open('christ.jpg'))
-    image = cv2.cvtColor(tile_down(image, 15), cv2.COLOR_BGR2HLS).astype(np.int16)
+    image = tile_down(image, 8)[:,:,::-1]
 
-    
+    cv2.imshow('original', image)
+
     # we adjust the average hsv values
     # we create an empty rgb image and fill it up using the hashbin we've created
-    
+
     new_image = np.zeros((image.shape[0]*TILE_SIZE, image.shape[1]*TILE_SIZE, 3))
-    
+
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
-            h, l, s = image[i, j]
-            dH, dL, dS = image[i, j] - hls_avg[hashbin[h, l]]
-            new_image[i*TILE_SIZE: (i+1)*TILE_SIZE, j*TILE_SIZE: (j+1)*TILE_SIZE] = shift_colour(im_list[hashbin[h, l]], dH, dL, dS)
-    
-    cv2.imshow('new', new_image.astype(np.uint8))
-    
-    
-    key = cv2.waitKey(10) 
-    if key == 13:
-        cv2.destroyAllWindows()
+            b, g, r = image[i, j]
+            new_image[i*TILE_SIZE: (i+1)*TILE_SIZE, j*TILE_SIZE: (j+1)*TILE_SIZE] = im_list[hashbin[g, b, r]]
+            # okay idk why but due to some very weird bug i have to look at index gbr, not bgr
+
+    cv2.imshow('new', new_image[:,:,::-1]/255)
+
+
+    key = cv2.waitKey(10)
