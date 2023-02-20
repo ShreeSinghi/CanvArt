@@ -18,9 +18,9 @@ from hasher import im_list, hls_avg, hashbin, TILE_SIZE
 # have to be created and freed repeatedly
 def shift_colour(image, dH, dL, dS):
     image = image.astype(float)
-    image[:, :, 0] = (image[:, :, 0]+dH)%181
-    image[:, :, 1] = np.clip(image[:, :, 1] + dL, 0, 255)
-    image[:, :, 2] = np.clip(image[:, :, 2] + dS, 0, 255)
+    # image[:, :, 0] = (image[:, :, 0]+dH)%181
+    # image[:, :, 1] = np.clip(image[:, :, 1] + dL, 0, 255)
+    # image[:, :, 2] = np.clip(image[:, :, 2] + dS, 0, 255)
     
     return cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_HLS2BGR)
 
@@ -54,20 +54,31 @@ def tile_down(image, window_size):
 
     return image
     
+video = cv2.VideoCapture(0)
+
+while(video.isOpened()):
+    showing, image = video.read()
     
-image = np.array(PIL.Image.open('christ.jpg'))
-image = cv2.cvtColor(tile_down(image, 30), cv2.COLOR_BGR2HLS).astype(np.int16)
+    cv2.imshow('original', image.astype(np.uint8))
+
+    # image = np.array(PIL.Image.open('christ.jpg'))
+    image = cv2.cvtColor(tile_down(image, 15), cv2.COLOR_BGR2HLS).astype(np.int16)
 
     
-# we adjust the average hsv values
-# we create an empty rgb image and fill it up using the hashbin we've created
-
-new_image = np.zeros((image.shape[0]*TILE_SIZE, image.shape[1]*TILE_SIZE, 3))
-
-for i in range(image.shape[0]):
-    for j in range(image.shape[1]):
-        h, l, s = image[i, j]
-        dH, dL, dS = image[i, j] - hls_avg[hashbin[h, l]]
-        new_image[i*TILE_SIZE: (i+1)*TILE_SIZE, j*TILE_SIZE: (j+1)*TILE_SIZE] = shift_colour(im_list[hashbin[h, s]], dH, dL, dS)
-
-plt.imshow(new_image.astype(float)/255)
+    # we adjust the average hsv values
+    # we create an empty rgb image and fill it up using the hashbin we've created
+    
+    new_image = np.zeros((image.shape[0]*TILE_SIZE, image.shape[1]*TILE_SIZE, 3))
+    
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            h, l, s = image[i, j]
+            dH, dL, dS = image[i, j] - hls_avg[hashbin[h, l]]
+            new_image[i*TILE_SIZE: (i+1)*TILE_SIZE, j*TILE_SIZE: (j+1)*TILE_SIZE] = shift_colour(im_list[hashbin[h, l]], dH, dL, dS)
+    
+    cv2.imshow('new', new_image.astype(np.uint8))
+    
+    
+    key = cv2.waitKey(10) 
+    if key == 13:
+        cv2.destroyAllWindows()

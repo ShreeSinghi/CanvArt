@@ -11,7 +11,7 @@ import numpy as np
 import os
 import cv2
 
-TILE_SIZE = 50
+TILE_SIZE = 20
 
 def center_crop(image, resize_dim):
 
@@ -52,7 +52,7 @@ def create_hashbin(hls_avg):
     hue_list = [list() for i in range(181)]
     
     for i, hls in enumerate(hls_avg):
-        hue_list[hls[0]].append((int(hls[2]), i))
+        hue_list[hls[0]].append((int(hls[1]), i))
     
     # for each hue we "fill" all unknown saturation values with closest image
     for hue in range(181):
