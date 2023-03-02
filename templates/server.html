@@ -11,26 +11,59 @@
 
 <body class="bg-dark">
 
-    <div class="row" style="min-height: 5vh"></div>
+    <div class="row" style="height: 5vh"></div>
     
-    <div class="d-flex row align-items-center justify-content-center border" style="min-height: 60vh">
-        <img src="/video_feed">
+    <div class="text-center border" style="height: 60vh">
+        <img src="" id="feed" class="img-fluid h-100">
     </div>
     
 
-    <div class="d-flex row align-items-center" style="min-height: 10vh">
-    <div class="col-1"></div>
-    <code class="col-5 text-center">IP: 127.0.0.1</code>
-    <code class="col-5 text-center">Port: 4589</code>
+    <div class="d-flex row align-items-center" style="height: 10vh">
+        <div class="col-1"></div>
+        <code class="col-5 text-center" id="ip">IP: </code>
+        <code class="col-5 text-center" id="port">Port: </code>
     </div>
 
-    <div class="row" style="min-height: 5vh"></div>
-    
-    <div class="d-flex row align-items-center" style="min-height: 15vh">
-    <div class="col-4"></div>
-    <div class="col-4 text-center text-white-50"> enter the IP and port shown above on the client's machine</div>
+    <div class="row" style="height: 5vh"></div>
+        <div class="d-flex row align-items-center" style="height: 15vh">
+        <div class="col-4"></div>
+        <div class="col-4 text-center text-white-50"> enter the IP and port shown above on the client's machine</div>
+    </div>
+
+    <div class="d-flex align-items-center">
+      <strong>Loading...</strong>
+      <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
     </div>
 
 </body>
+
+<script>
+var timeout;
+
+async function update_connection() {
+
+  let get;
+  
+  try {
+    const res = await fetch("/status");
+    get = await res.json();
+  } catch (e) {
+    console.error("Error: ", e);
+  }
+  
+  if (get.PORT != ""){
+    document.getElementById("ip").innerHTML = "IP: " + get.HOST_IP;
+    document.getElementById("port").innerHTML = "Port: " + get.PORT;
+  }
+
+  if (get.connected == "True"){
+      document.getElementById("feed").src = "/video_feed";
+      return false;
+  }
+  timeout = setTimeout(update_connection, 1000);
+}
+
+update_connection();
+</script>
 
 </html>

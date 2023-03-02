@@ -18,15 +18,17 @@ def retrieve():
     # first we receive the header (size of the pickle file)
     while len(data) < HEADER_SIZE:
         # the smaller the size of datapacket, the longer it takes to receive
-        packet = client.recv(2**12)
-        if not packet: break
+        packet = client.recv(2**10)
+        if not packet:
+            print('noooooo')
+            break
         data += packet
     
     msg_size = struct.unpack("Q", data[:HEADER_SIZE])[0]
     data = data[HEADER_SIZE:]
     
     while len(data) < msg_size:
-        data += client.recv(2**12)
+        data += client.recv(2**10)
         
     pickle_data = data[:msg_size]
     data  = data[msg_size:] # the remainder of data received is stored for the next loop 
@@ -36,9 +38,9 @@ def retrieve():
 ############# SERVER STUFF ##################
 
 client = socket(AF_INET, SOCK_STREAM)
-host_ip = '192.168.29.126'
-PORT = 11021
-client.connect((host_ip, PORT)) 
+HOST_IP = input("IP: ")
+PORT = int(input("Port: "))
+client.connect((HOST_IP, PORT)) 
 
 data = b""  # creates an empty data packet
 
