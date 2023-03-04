@@ -28,7 +28,6 @@ Session(app)
 
 def server_connect():
     global client_socket, server_socket, HOST_IP, PORT, connected
-    ############# SERVER STUFF ##################
     
     ips = get_ips()
     
