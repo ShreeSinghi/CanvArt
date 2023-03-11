@@ -10,25 +10,27 @@
 </head>
 
 <body class="bg-dark">
+<div class="row container">
 
-    <div class="row" style="height: 15vh"></div>
-    <div class="row align-items-center" style="height: 70vh">
+
+    <div class="row" style="height: 5vh"></div>
+    <div class="row align-items-center" style="height: 90vh">
         <div class="col-3 border">
-        <form action="#" method="POST" role="form">
+        <form role="form" id="form" method="post">
             <div class="form-floating row mx-1 my-5">
                 <input type="text" class="form-control" id="ip" placeholder="Enter IP" name="ip">
                 <label for="ip">Host IP</label>
             </div>
     
             <div class="form-floating row mx-1 my-5">
-                <input type="number" class="form-control" id="port" placeholder="Enter Port" name="port">
-                <label for="port">Host Port</label>
+                <input type="number" class="form-control" id="port" placeholder="Enter port" name="port">
+                <label for="port">Host port</label>
             </div>
             
             <div class="row align-items-center justify-content-center">
                 <button class="btn btn-info col-6 btn-sm mx-1" type="button" disabled>
-                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                  <span class="sr-only">Loading...</span>
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="spinner"></span>
+                  <span class="sr-only" id="message">Loading...</span>
                 </button>
     
                 <div class="text-center col-4">
@@ -37,14 +39,42 @@
             </div>
             
         </form>
+        
         </div>
         
-        <div class="col-9 border">
-            <img src="" id="feed" class="img-fluid h-100">
+        <div class="col-9 text-center border" style="height: 90vh">
+            <img src="{{video_url}}" id="feed" class="img-fluid h-100">
         </div>
     </div>
 
-
+</div>
 </body>
+
+<script>
+var timeout;
+
+async function update_connection() {
+
+  let get;
+  
+  try {
+    const res = await fetch("/client_status");
+    get = await res.json();
+  } catch (e) {
+    console.error("Error: ", e);
+  }
+  
+  if (message=="Connected!"){
+      document.getElementById("spinner").classList.add("d-none");
+  } else {
+      document.getElementById("spinner").classList.remove("d-none");
+  }
+  document.getElementById("message").innerHTML = get.message;
+
+  timeout = setTimeout(update_connection, 1000);
+}
+
+update_connection();
+</script>
 
 </html>

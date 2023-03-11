@@ -21,7 +21,7 @@
     <div class="d-flex row align-items-center" style="height: 10vh">
         <div class="col-1"></div>
         <code class="col-5 text-center" id="ip">IP: </code>
-        <code class="col-5 text-center" id="port">Port: </code>
+        <code class="col-5 text-center" id="port">port: </code>
     </div>
 
     <div class="row" style="height: 5vh"></div>
@@ -45,19 +45,19 @@ async function update_connection() {
   let get;
   
   try {
-    const res = await fetch("/status");
+    const res = await fetch("/server_status");
     get = await res.json();
   } catch (e) {
     console.error("Error: ", e);
   }
   
-  if (get.PORT != ""){
-    document.getElementById("ip").innerHTML = "IP: " + get.HOST_IP;
-    document.getElementById("port").innerHTML = "Port: " + get.PORT;
+  if (get.port != ""){
+    document.getElementById("ip").innerHTML = "IP: " + get.host_ip;
+    document.getElementById("port").innerHTML = "port: " + get.port;
   }
 
   if (get.connected == "True"){
-      document.getElementById("feed").src = "/video_feed";
+      document.getElementById("feed").src = "/feed_server";
       return false;
   }
   timeout = setTimeout(update_connection, 1000);
