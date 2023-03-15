@@ -12,34 +12,6 @@ import PIL
 from matplotlib import pyplot as plt
 import hasher
 
-# can be optimised by creating a global "temporary" variable so that memory doesn't
-# have to be created and freed repeatedly
-def shift_colour(image, dB, dG, dR):
-    """
-    Parameters
-    ----------
-    image : np.array
-        numpy array representing image in bgr space
-    dB : float
-        change in blue value
-    dG : float
-        change in green value
-    dR : float
-        change in red value
-
-    Returns
-    -------
-    image : np.array
-        modified image shifted by given colour values
-
-    """
-    
-    image = image.copy()
-    image[:, :, 0] = np.clip(image[:, :, 0] + dB, 0, 255)
-    image[:, :, 1] = np.clip(image[:, :, 1] + dG, 0, 255)
-    image[:, :, 2] = np.clip(image[:, :, 2] + dR, 0, 255)
-    return image
-
 def window_down(image, window_size):
     """
     Parameters

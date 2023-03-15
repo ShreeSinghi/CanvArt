@@ -45,9 +45,7 @@ def retrieve():
 def feed_generator(glob_vars):
     global data, HEADER_SIZE, client
     
-    yield b'--frame\r\n'
-    tile_size = 20
-    
+    yield b'--frame\r\n'    
     hashbin, im_list, bgr_avg = hasher.load_data()
     
     while True:
@@ -57,9 +55,7 @@ def feed_generator(glob_vars):
             print(glob_vars, file=sys.stderr)
         
             client = socket(AF_INET, SOCK_STREAM)
-            print("connecting", file=sys.stderr)
             client.connect((host_ip, port))
-            print("connected", file=sys.stderr)
             
             data = b""
             

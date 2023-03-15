@@ -11,8 +11,6 @@ import hasher
 import converter
 import moviepy.editor as mpy
 import os
-import numpy as np
-import sys
 import shutil
 
 window_size = 10

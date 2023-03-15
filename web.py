@@ -11,7 +11,6 @@ import server
 import client
 import file_manager
 import json
-import sys
 import os
 import hasher
 import shutil
@@ -36,16 +35,15 @@ def upload_convert():
     glob_vars["message"] = ""
     
     uploaded_files = request.files.getlist("file")
-    print(uploaded_files, file=sys.stderr)
 
     file_manager.refresh('uploaded/')
     file_manager.refresh('converted/')
     
     for i, file in enumerate(uploaded_files):
-        if file.filename.endswith('.jpg') or file.filename.endswith('.mp4'):
+        name = file.filename.lower()
+        if name.endswith('.jpg') or name.endswith('.mp4') or name.endswith('.jpeg'):
             with open(f'uploaded/{file.filename}', 'wb') as f: 
                 f.write(file.read())
-                print(file.filename, file=sys.stderr)
     
     uploaded_files = [f"uploaded/{file}" for file in os.listdir('uploaded')]
     for file in uploaded_files:
@@ -73,16 +71,15 @@ def upload():
     glob_vars["message"] = "uploading!"
     
     uploaded_files = request.files.getlist("file")
-    print(uploaded_files, file=sys.stderr)
 
     shutil.rmtree('subimages/')
     os.makedirs('subimages/')
     
     for i, file in enumerate(uploaded_files):
-        if file.filename.endswith('.jpg'):
+        name = file.filename.lower()
+        if name.endswith('.jpg') or name.endswith('.jpeg'):
             with open(f'subimages/{file.filename}', 'wb') as f: 
                 f.write(file.read())
-                print(file.filename, file=sys.stderr)
             
     im_list = hasher.create_imarray(tile_size, 'subimages')
     bgr_avg, hashbin = hasher.main(im_list)
@@ -145,4 +142,4 @@ def client_page():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False, port=4018)
+    app.run(debug=True, use_reloader=False, port=4020)

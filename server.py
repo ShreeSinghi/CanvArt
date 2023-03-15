@@ -57,7 +57,6 @@ def feed_generator(glob_vars):
             glob_vars["port"] = server_socket.getsockname()[1]
         
             server_socket.listen(4)
-            print('connect:', file=sys.stderr)
             client, addr = server_socket.accept()
             glob_vars["message"] = ""
             
@@ -73,8 +72,8 @@ def feed_generator(glob_vars):
                     
             while True:
                 
-                image = cv2.flip(video.read()[1], -1)
-                small_image = converter.convert(image)  
+                image = video.read()[1]
+                small_image = converter.convert(image)    
                 
                 send(small_image, client)
                 

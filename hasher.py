@@ -6,7 +6,6 @@ Created on Sun Feb 19 22:32:10 2023
 @author: shree
 """
 
-import PIL
 import numpy as np
 import os
 import cv2
@@ -36,7 +35,7 @@ def create_imarray(tile_size, directory):
 
     # load all jpg images in an array of bgr
     im_list = filter(lambda x: x.lower().endswith('.jpg') or x.lower().endswith('.jpeg'), os.listdir(directory))
-    im_list = map(lambda x: center_crop(cv2.imread(f'{directory}/{x}'), tile_size), im_list)
+    im_list = map(lambda x: center_crop(cv2.imread(f'{directory}/{x}')[..., ::-1], tile_size), im_list)
     im_list = np.array(list(im_list))[:,:,:,::-1]
 
     return im_list
