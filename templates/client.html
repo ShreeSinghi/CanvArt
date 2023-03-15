@@ -29,7 +29,7 @@
             
             <div class="row align-items-center justify-content-center">
                 <button class="btn btn-info col-6 btn-sm mx-1" type="button" disabled>
-                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="spinner"></span>
+                  <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinner"></span>
                   <span class="sr-only" id="message">Loading...</span>
                 </button>
     
@@ -58,15 +58,16 @@ async function update_connection() {
   let get;
   
   try {
-    const res = await fetch("/client_status");
+    const res = await fetch("/status");
     get = await res.json();
   } catch (e) {
     console.error("Error: ", e);
   }
   
-  if (message=="Connected!"){
+  if (get.message=="Connected!"){
       document.getElementById("spinner").classList.add("d-none");
-  } else {
+  }
+  else {
       document.getElementById("spinner").classList.remove("d-none");
   }
   document.getElementById("message").innerHTML = get.message;

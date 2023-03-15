@@ -13,21 +13,21 @@
 
     <div class="row" style="height: 5vh"></div>
     
-    <div class="text-center border" style="height: 60vh">
-        <img src="" id="feed" class="img-fluid h-100">
+    <div class="text-center" style="height: 60vh">
+        <img src="/feed_server" id="feed" class="img-fluid h-100">
     </div>
     
 
     <div class="d-flex row align-items-center" style="height: 10vh">
         <div class="col-1"></div>
         <code class="col-5 text-center" id="ip">IP: </code>
-        <code class="col-5 text-center" id="port">port: </code>
+        <code class="col-5 text-center" id="port">Port: </code>
     </div>
 
     <div class="row" style="height: 5vh"></div>
         <div class="d-flex row align-items-center" style="height: 15vh">
         <div class="col-4"></div>
-        <div class="col-4 text-center text-white-50"> enter the IP and port shown above on the client's machine</div>
+        <div class="col-4 text-center text-white-50" id="message"> enter the IP and port shown above on the client's machine</div>
     </div>
 
     <div class="d-flex align-items-center">
@@ -45,22 +45,19 @@ async function update_connection() {
   let get;
   
   try {
-    const res = await fetch("/server_status");
-    get = await res.json();
+  const res = await fetch("/status");
+  get = await res.json();
+
+  
+  document.getElementById("ip").innerHTML = "IP: " + get.host_ip;
+  document.getElementById("port").innerHTML = "Port: " + get.port;
+  document.getElementById("message").innerHTML = "enter the IP and port shown above on the client's machine\n" + get.message;
+  
+  timeout = setTimeout(update_connection, 1000);
+  
   } catch (e) {
     console.error("Error: ", e);
   }
-  
-  if (get.port != ""){
-    document.getElementById("ip").innerHTML = "IP: " + get.host_ip;
-    document.getElementById("port").innerHTML = "port: " + get.port;
-  }
-
-  if (get.connected == "True"){
-      document.getElementById("feed").src = "/feed_server";
-      return false;
-  }
-  timeout = setTimeout(update_connection, 1000);
 }
 
 update_connection();

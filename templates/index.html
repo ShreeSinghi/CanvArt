@@ -10,34 +10,36 @@
 </head>
 
 <body class="bg-dark">
+    
+    <div class="row" style="height: 5vh"></div>
 
-    <div class="row" style="min-height: 5vh"></div>
+    <div class="d-flex row" style="height: 5vh"></div>
+    
+    <form method="POST" enctype="multipart/form-data" action="/upload">
+      <input class="btn align-items-center justify-content-center btn-outline-info btn-sm" type="file" name="file" multiple="" value="choose files">
+      <input class="btn align-items-center justify-content-center btn-outline-info btn-sm" type="submit" value="upload .jpg" id="upload">
+    </form>
 
-    <div class="d-flex row" style="min-height: 5vh"></div>
-            <div class="col-2 text-center">
-                <button type="button" class="btn align-items-center justify-content-center btn-outline-info btn-sm">choose image folder</button>
-            </div>
-
-    <div class="row" style="min-height: 15vh"></div>
+    <div class="row" style="height: 15vh"></div>
 
 
-    <div class="d-flex row align-items-center justify-content-center" style="min-height: 30vh">
+    <div class="d-flex row align-items-center justify-content-center" style="height: 30vh">
 
         <h1 class="text-center text-white-50">what's your purpose?</h1>
-        <h1></h1><h1></h1><h1></h1><h1></h1><h1></h1><h1></h1>
+        <div class="row" style="height: 15vh"></div>
 	
 	
         <div class="row buttons">
             <div class="col-4 text-center">
-                <a href="server" role="button" class="btn btn-outline-info btn-lg ">SERVER</a>
+                <a href="/server" role="button" class="btn btn-outline-info btn-lg ">SERVER</a>
             </div>
 
             <div class="col-4 text-center">
-                <a href="/download" role="button" class="btn btn-outline-info btn-lg">CONVERT FILES</a>
+                <a href="/convert" role="button" class="btn btn-outline-info btn-lg">CONVERT FILES</a>
             </div>
 
             <div class="col-4 text-center">
-                <a href="client" role="button" class="btn btn-outline-info btn-lg ">CLIENT</a>
+                <a href="/client" role="button" class="btn btn-outline-info btn-lg ">CLIENT</a>
             </div>
 
             <!-- add carousel -->
@@ -46,5 +48,31 @@
     </div>
 
 </body>
+
+<script>
+var timeout;
+
+async function update_connection() {
+
+  try {
+  
+  let get;
+  const res = await fetch("/status");
+  get = await res.json();
+
+  
+  document.getElementById("upload").value = get.message;
+
+  timeout = setTimeout(update_connection, 1000);
+  
+  } catch (e) {
+    console.error("Error: ", e);
+  }
+}
+
+update_connection();
+
+</script>
+
 
 </html>
