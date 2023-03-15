@@ -1,3 +1,7 @@
 .spyproject
 subimages
 __pycache__
+temp
+data/bgravg.joblib
+data/hash.joblib
+data/imarray.joblib
