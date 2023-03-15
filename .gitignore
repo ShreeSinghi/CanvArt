@@ -2,5 +2,6 @@
 subimages
 __pycache__
 temp
-data
-*.xcf
+data/bgravg.joblib
+data/hash.joblib
+data/imarray.joblib

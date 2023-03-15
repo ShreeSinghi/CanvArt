@@ -10,8 +10,6 @@ import cv2
 import pickle
 import hasher
 import converter
-import os
-from joblib import dump, load
 from socket import socket, AF_INET, SOCK_STREAM
 import psutil
 import sys
@@ -24,14 +22,6 @@ def get_ips():
                 ips[interface] = snic.address
     return ips
 
-def save_data(hashbin, imarray, bgr_avg):
-    dump(hashbin, 'hash.joblib')
-    dump(imarray, 'imarray.joblib')
-    dump(imarray, 'bgravg.joblib')
-
-def load_data():
-    return load('hash.joblib'), load('imarray.joblib'), load('bgravg.joblib')
-
 def send(array, client):
     pickle_data = pickle.dumps(array)
     
@@ -41,9 +31,16 @@ def send(array, client):
 
 
 def feed_generator(glob_vars):
-    ################# SERVER STUFF #####################
+    video = cv2.VideoCapture(0)
+
+    window_size = 20
+    
+    yield b'--frame\r\n'
+    
     while True:
         try:
+    
+    ################# SERVER STUFF #####################
             ips = get_ips()
             
             server_socket = socket(AF_INET, SOCK_STREAM)
@@ -60,45 +57,31 @@ def feed_generator(glob_vars):
             glob_vars["port"] = server_socket.getsockname()[1]
         
             server_socket.listen(4)
-            
-            print('Listening', file=sys.stderr)
-            
+            print('connect:', file=sys.stderr)
             client, addr = server_socket.accept()
-            print(f'Connected to: {addr}', file=sys.stderr)
-            glob_vars["connected"] = "True"
+            glob_vars["message"] = ""
             
-            ################# VIDEO STUFF #####################
+    ################# VIDEO STUFF #####################
             
-            window_size = 20
-            tile_size = 20
+            hashbin, im_list, bgr_avg = hasher.load_data()
             
-            if all(x in os.listdir() for x in ['hash.joblib', 'imarray.joblib', 'bgravg.joblib']):
-                hashbin, im_list, bgr_avg = load_data()
-            else:
-                im_list = hasher.create_imarray(tile_size, 'subimages')
-                bgr_avg, hashbin = hasher.main(im_list)
-                save_data(hashbin, im_list, bgr_avg)
-                
-            video = cv2.VideoCapture(0)
             showing, image = video.read()
             
             converter.init(image.shape[0]//window_size, image.shape[1]//window_size,
                            im_list, bgr_avg, hashbin, window_size)
             
-            yield b'--frame\r\n'
                     
             while True:
                 
-                image = video.read()[1]
-                small_image = converter.convert(image)    
+                image = cv2.flip(video.read()[1], -1)
+                small_image = converter.convert(image)  
                 
                 send(small_image, client)
                 
                 frame = cv2.imencode('.bmp', converter.result_image)[1].tobytes()
                 
                 yield b'Content-Type: image/bmp\r\n\r\n' + frame + b'\r\n--frame\r\n'
+                
         except ConnectionResetError:
-            image = cv2.imread("/images/client disconnected.png")
-                        
-            frame = cv2.imencode('.bmp', image)[1].tobytes()
-            yield b'Content-Type: image/bmp\r\n\r\n' + frame + b'\r\n--frame\r\n'
+            glob_vars["message"] = "CLIENT DISCONNECTED!"
+            

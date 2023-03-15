@@ -11,6 +11,15 @@ import numpy as np
 import os
 import cv2
 from scipy.spatial import KDTree
+from joblib import dump, load
+
+def save_data(hashbin, im_list, bgr_avg):
+    dump(hashbin, 'data/hash.joblib')
+    dump(im_list, 'data/imarray.joblib')
+    dump(im_list, 'data/bgravg.joblib')
+
+def load_data():
+    return load('data/hash.joblib'), load('data/imarray.joblib'), load('data/bgravg.joblib')
 
 def center_crop(image, resize_dim):
 
@@ -27,7 +36,7 @@ def create_imarray(tile_size, directory):
 
     # load all jpg images in an array of bgr
     im_list = filter(lambda x: x.lower().endswith('.jpg') or x.lower().endswith('.jpeg'), os.listdir(directory))
-    im_list = map(lambda x: center_crop(np.array(PIL.Image.open(f'{directory}/{x}')), tile_size), im_list)
+    im_list = map(lambda x: center_crop(cv2.imread(f'{directory}/{x}'), tile_size), im_list)
     im_list = np.array(list(im_list))[:,:,:,::-1]
 
     return im_list
