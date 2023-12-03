@@ -23,4 +23,6 @@ You can choose your dataset of tiler images by uploading jpg files using the but
 
 Enjoy your super cool video streaming!
 
+![demo](https://github.com/ShreeSinghi/CanvArt/assets/41577064/85a7c11f-f8e5-4e23-86e2-efc11512eb93)
+
 ![kohli](https://i.imgur.com/WlXyu3J.jpeg)
